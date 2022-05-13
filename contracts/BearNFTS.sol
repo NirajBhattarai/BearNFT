@@ -4,8 +4,6 @@ pragma solidity ^0.8.1;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "./ERC721A.sol";
-import "@openzeppelin/contracts/utils/Strings.sol";
-import "@chainlink/contracts/src/v0.8/VRFConsumerBase.sol";
 
 struct Reward {
     uint256 tokenId;
@@ -18,8 +16,7 @@ struct RewardClaimer {
 }
 
 contract BearNFTS is Ownable, ERC721A {
-    uint256 public constant TOTAL_SUPPLY = 10000;
-    uint256 public constant BATCH_MINT_SIZE = 20;
+    uint256 public constant COLLECTION_SIZE = 10000;
 
     // // metadata URI
     string private _baseTokenURI;
@@ -33,16 +30,16 @@ contract BearNFTS is Ownable, ERC721A {
     }
 
     /**
-    @dev tokenId to resting start time (0 = not resting).
+    @dev tokenId to hibernation start time (0 = not hibernation).
      */
-    mapping(uint256 => uint256) private restingStarted;
+    mapping(uint256 => uint256) private hibernationStarted;
 
-    bool public restBears = false;
+    bool public hibernationStatus = false;
 
     /**
-    @dev Cumulative per-token resting, excluding the current period.
+    @dev Cumulative per-token hibernation, excluding the current period.
      */
-    mapping(uint256 => uint256) private restingTotal;
+    mapping(uint256 => uint256) private hibernationTotal;
 
     // Mapping of tokenId with address to prevent duplicate assigning
     mapping(uint256 => RewardClaimer) private _rewardClaimer;
@@ -53,18 +50,16 @@ contract BearNFTS is Ownable, ERC721A {
     // mapping owner address with reward count
     mapping(address => uint256) private _rewards;
 
-    constructor()
-        ERC721A("BearNFTS", "BearNFTS", BATCH_MINT_SIZE, TOTAL_SUPPLY)
-    {}
+    constructor() ERC721A("Barbearian", "BEAR", COLLECTION_SIZE) {}
 
-    function addRewards(uint256[] memory tokenIds, address[] memory accounts)
+    function addWhitelist(uint256[] memory tokenIds, address[] memory accounts)
         external
         onlyOwner
     {
         for (uint256 index = 0; index < tokenIds.length; index++) {
-            require(!_rewardExits(tokenIds[index]), "Token Already Rewarded");
+            require(!_rewardExits(tokenIds[index]), "TokenId Already Rewarded");
             require(
-                tokenIds[index] != 0 && tokenIds[index] <= TOTAL_SUPPLY,
+                tokenIds[index] != 0 && tokenIds[index] <= COLLECTION_SIZE,
                 "Invalid Token Id"
             );
             _rewardClaimer[tokenIds[index]] = RewardClaimer(
@@ -95,7 +90,7 @@ contract BearNFTS is Ownable, ERC721A {
         return _rewards[owner];
     }
 
-    function claimRewards(uint256[] memory rewardIndexes) external {
+    function claimBears(uint256[] memory rewardIndexes) external {
         uint256 rewardBalance = rewardOf(msg.sender);
         uint256[] memory tokenIds = new uint256[](rewardIndexes.length);
         for (uint256 index = 0; index < rewardIndexes.length; index++) {
@@ -118,8 +113,8 @@ contract BearNFTS is Ownable, ERC721A {
         return _rewardClaimer[tokenId].addr != address(0);
     }
 
-    function changeRestBears(bool status) public onlyOwner {
-        restBears = status;
+    function changeHibernationStatus(bool status) public onlyOwner {
+        hibernationStatus = status;
     }
 
     /**
@@ -133,11 +128,11 @@ contract BearNFTS is Ownable, ERC721A {
     ) internal view override {
         uint256 tokenId = startTokenId;
         for (uint256 end = tokenId + quantity; tokenId < end; ++tokenId) {
-            require(restingStarted[tokenId] == 0, "Bear: resting");
+            require(hibernationStarted[tokenId] == 0, "Bear: resting");
         }
     }
 
-    function restingPeriod(uint256 tokenId)
+    function hibernationPeriod(uint256 tokenId)
         external
         view
         returns (
@@ -146,33 +141,33 @@ contract BearNFTS is Ownable, ERC721A {
             uint256 total
         )
     {
-        uint256 start = restingStarted[tokenId];
+        uint256 start = hibernationStarted[tokenId];
         if (start != 0) {
             resting = true;
             current = block.timestamp - start;
         }
-        total = current + restingTotal[tokenId];
+        total = current + hibernationTotal[tokenId];
     }
 
-    function toggleResting(uint256 tokenId) internal {
+    function toggleHibernation(uint256 tokenId) internal {
         require(
             ownershipOf(tokenId).addr == _msgSender(),
             "ERC721ACommon: Not owner"
         );
-        uint256 start = restingStarted[tokenId];
+        uint256 start = hibernationStarted[tokenId];
         if (start == 0) {
-            require(restBears, "Bear: resting closed");
-            restingStarted[tokenId] = block.timestamp;
+            require(hibernationStatus, "Bear: resting closed");
+            hibernationStarted[tokenId] = block.timestamp;
         } else {
-            restingTotal[tokenId] += block.timestamp - start;
-            restingStarted[tokenId] = 0;
+            hibernationTotal[tokenId] += block.timestamp - start;
+            hibernationStarted[tokenId] = 0;
         }
     }
 
-    function toggleResting(uint256[] calldata tokenIds) external {
+    function toggleHibernation(uint256[] calldata tokenIds) external {
         uint256 n = tokenIds.length;
         for (uint256 i = 0; i < n; ++i) {
-            toggleResting(tokenIds[i]);
+            toggleHibernation(tokenIds[i]);
         }
     }
 }

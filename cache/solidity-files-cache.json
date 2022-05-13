@@ -2,8 +2,8 @@
   "_format": "hh-sol-cache-2",
   "files": {
     "/home/niraj/Desktop/Bullievers/Azuki/contracts/BearNFTS.sol": {
-      "lastModificationDate": 1652165628712,
-      "contentHash": "fdd215ce4634943e93d0bd095a1cb2d2",
+      "lastModificationDate": 1652407794910,
+      "contentHash": "b1f790e05658e7a6e159a278117c97ef",
       "sourceName": "contracts/BearNFTS.sol",
       "solcConfig": {
         "version": "0.8.1",
@@ -30,9 +30,7 @@
       },
       "imports": [
         "@openzeppelin/contracts/access/Ownable.sol",
-        "./ERC721A.sol",
-        "@openzeppelin/contracts/utils/Strings.sol",
-        "@chainlink/contracts/src/v0.8/VRFConsumerBase.sol"
+        "./ERC721A.sol"
       ],
       "versionPragmas": [
         "^0.8.1"
@@ -79,8 +77,8 @@
       ]
     },
     "/home/niraj/Desktop/Bullievers/Azuki/contracts/ERC721A.sol": {
-      "lastModificationDate": 1652163403158,
-      "contentHash": "f34e8428ed29c2563f4b34b051dd167e",
+      "lastModificationDate": 1652354550251,
+      "contentHash": "f9f809c041837f0100873c82d9c851af",
       "sourceName": "contracts/ERC721A.sol",
       "solcConfig": {
         "version": "0.8.1",

@@ -44,7 +44,6 @@ contract ERC721A is
     uint256 private currentIndex = 0;
 
     uint256 internal immutable collectionSize;
-    uint256 internal immutable maxBatchSize;
 
     // Token name
     string private _name;
@@ -73,17 +72,14 @@ contract ERC721A is
     constructor(
         string memory name_,
         string memory symbol_,
-        uint256 maxBatchSize_,
         uint256 collectionSize_
     ) {
         require(
             collectionSize_ > 0,
             "ERC721A: collection must have a nonzero supply"
         );
-        require(maxBatchSize_ > 0, "ERC721A: max batch size must be nonzero");
         _name = name_;
         _symbol = symbol_;
-        maxBatchSize = maxBatchSize_;
         collectionSize = collectionSize_;
     }
 
@@ -95,7 +91,8 @@ contract ERC721A is
     }
 
     /**
-     * @dev See {IERC721Enumerable-tokenByIndex}.
+     * @dev This read function is to return index wrt tokenId. As we have same index
+     * with tokenId. We are limiting till collectionSize
      */
     function tokenByIndex(uint256 index)
         public
@@ -103,7 +100,7 @@ contract ERC721A is
         override
         returns (uint256)
     {
-        require(index < totalSupply(), "ERC721A: global index out of bounds");
+        require(index <= collectionSize, "Global index out of bounds");
         return index;
     }
 
@@ -171,20 +168,7 @@ contract ERC721A is
         returns (TokenOwnership memory)
     {
         require(_exists(tokenId), "ERC721A: owner query for nonexistent token");
-
-        uint256 lowestTokenToCheck;
-        if (tokenId >= maxBatchSize) {
-            lowestTokenToCheck = tokenId - maxBatchSize + 1;
-        }
-
-        for (uint256 curr = tokenId; curr >= lowestTokenToCheck; curr--) {
-            TokenOwnership memory ownership = _ownerships[curr];
-            if (ownership.addr != address(0)) {
-                return ownership;
-            }
-        }
-
-        revert("ERC721A: unable to determine the owner of token");
+        return _ownerships[tokenId];
     }
 
     /**
